@@ -7,8 +7,8 @@ import numpy as np
 # output_file = "C:\\Users\\roych\\OneDrive\\Desktop\\Active10_Greenspace_Steps.csv"
 
 # input_file = "/data/active10/user-steps-locations-lsoa-20240521.csv.gz"
-input_file = "/Users/nsi/Downloads/FINAL1.xlsx"
-output_file = "/Users/nsi/Downloads/Active10_Greenspace_Steps.csv"
+input_file = "/Users/nsi/Downloads/FINAL1_Test.xlsx"
+output_file = "/Users/nsi/Downloads/Active10_Greenspace_Steps_Test.csv"
 min_step_threshold = 500
 
 # Read the Excel file
@@ -57,19 +57,17 @@ print(df.head())
 
 # FUNCTIONS
 
-def get_daily_steps(df, columns, min_step_threshold=0):
+def get_daily_steps(df, columns, min_step_threshold=1):
     # Select the columns to be included
     select = df.columns.get_level_values(1).isin(columns)
     # get the selected column steps
     steps = df.loc[:, select]
     # get the sum of the daily values
     steps = steps.groupby(level=0, axis=1).sum()
-    # replace zero values with NaN so they are ignored
-    steps.replace(0, np.nan, inplace=True)
-    print(steps.head())
 
     # Remove days (set to NaN) with fewer steps than min_step_threshold
     steps = steps.mask(steps < min_step_threshold)
+    print(steps.head())
     return steps
 
 
@@ -108,13 +106,13 @@ all_day_count = get_day_count(all_steps, 'All_Days')
 
 # CALCULATE VALUE FOR ALL WALKING STEPS (CADENCE >= 60)
 
-all_walking = get_daily_steps(df, all_walking_columns, min_step_threshold)
+all_walking = get_daily_steps(df, all_walking_columns)
 median_all_walking = get_median_daily_steps(all_walking, 'Walking_Steps')
 all_walking_day_count = get_day_count(all_walking, 'Walking_Days')
 
 # CALCULATE VALUE FOR ALL ACTIVE WALKING STEPS (CADENCE >= 90)
 
-active_walking = get_daily_steps(df, active_walking_columns, min_step_threshold)
+active_walking = get_daily_steps(df, active_walking_columns)
 median_active_walking = get_median_daily_steps(active_walking, 'Active_Steps')
 active_walking_day_count = get_day_count(active_walking, 'Active_Days')
 
