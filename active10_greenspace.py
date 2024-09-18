@@ -5,8 +5,9 @@ import pandas as pd
 import numpy as np
 
 # Define the file path
-input_file = "/Users/nsi/Downloads/FINAL1_Test.xlsx"
+input_file = "/Users/nsi/Downloads/FINAL1.xlsx"
 output_file = "/Users/nsi/Downloads/Active10_Greenspace_Steps.csv"
+min_step_threshold = 500
 
 # Read the Excel file
 print('Reading the file: ' + input_file)
@@ -57,6 +58,9 @@ print(df.head())
 all_steps = df.xs('steps', axis=1, level=1, drop_level=False)
 print(all_steps.head())
 
+# Remove days with less than 500 steps
+all_steps = all_steps.mask(all_steps < min_step_threshold)
+
 # calculate the median of the daily steps
 median_all_steps = all_steps.median(axis=1, skipna=True)
 median_all_steps = median_all_steps.to_frame().reset_index()
@@ -80,6 +84,9 @@ all_walking = all_walking.groupby(level=0, axis=1).sum()
 all_walking.replace(0, np.nan, inplace=True)
 print(all_walking.head())
 
+# Remove days with less than 500 steps
+all_walking = all_walking.mask(all_walking < min_step_threshold)
+
 # calculate the median of the daily walking steps
 median_all_walking = all_walking.median(axis=1, skipna=True)
 median_all_walking = median_all_walking.to_frame().reset_index()
@@ -102,6 +109,9 @@ active_walking = active_walking.groupby(level=0, axis=1).sum()
 active_walking.replace(0, np.nan, inplace=True)
 print(active_walking.head())
 
+# Remove days with less than 500 steps
+active_walking = active_walking.mask(active_walking < min_step_threshold)
+
 # calculate the median of the daily active walking steps
 median_active_walking = active_walking.median(axis=1, skipna=True)
 median_active_walking = median_active_walking.to_frame().reset_index()
@@ -118,19 +128,22 @@ print(active_walking_day_count.head())
 
 # MERGE ALL DATA
 
-df = df.drop(base_column_names, axis=1, level=1)
-df.columns = df.columns.get_level_values(1)
-df = df.reset_index()
-df.columns = ['Userid', 'countyCode', 'censusArea']
-print(df.head())
-
-merged = pd.merge(all_day_count, median_all_steps, on='Userid', how='left')
+merged = pd.merge(all_day_count, all_walking_day_count, on='Userid', how='left')
+merged = pd.merge(merged, active_walking_day_count, on='Userid', how='left')
+merged = pd.merge(merged, median_all_steps, on='Userid', how='left')
 merged = pd.merge(merged, median_all_walking, on='Userid', how='left')
 merged = pd.merge(merged, median_active_walking, on='Userid', how='left')
 print(merged.head())
 
+df = df.drop(base_column_names, axis=1, level=1)
+df.columns = df.columns.get_level_values(1)
+df = df.reset_index()
+df.columns = ['Userid', 'countyCode', 'censusArea']
 df = pd.merge(df, merged, on='Userid', how='left')
 print(df.head(10).to_string())
+
+# Replace NaN with zeros
+df.replace(np.nan, 0, inplace=True)
 
 print("Writing results to file: " + output_file)
 df.to_csv(output_file, index=False)
