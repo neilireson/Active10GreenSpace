@@ -1,5 +1,3 @@
-from os import error
-
 import openpyxl # required for Excel
 import pandas as pd
 import numpy as np
