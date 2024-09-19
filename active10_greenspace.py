@@ -1,6 +1,6 @@
 from os import error
 
-import openpyxl
+import openpyxl # required for Excel
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
